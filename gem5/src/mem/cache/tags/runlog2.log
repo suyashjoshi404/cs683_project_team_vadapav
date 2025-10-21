@@ -1,0 +1,11 @@
+Global frequency set at 1000000000000 ticks per second
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 25.0.0.0
+gem5 compiled Jul 15 2025 11:34:30
+gem5 started Jul 15 2025 11:37:57
+gem5 executing on ASPLOS, pid 816117
+command line: /home2/arif/gem5-25.0.0.0/build/X86/gem5.debug /home2/arif/gem5-25.0.0.0/configs/deprecated/example/se.py --cpu-type=X86O3CPU --mem-size=8GiB --bertil1 --pl2sl3cache --standard-switch=200000000 --warmup-insts=200000000 --maxinsts=50000000 --cmd=/home2/arif/gem5-25.0.0.0/Checkpoints/mcf/run/mcf_s_base.spec-m64 --option=/home2/arif/gem5-25.0.0.0/Checkpoints/mcf/run/inp.in -r 1644000000000 --at-instruction --checkpoint-dir=/home2/arif/gem5-25.0.0.0/Checkpoints/mcf/Simpoints --prog-interval=300Hz
+
+Switch at instruction count:1

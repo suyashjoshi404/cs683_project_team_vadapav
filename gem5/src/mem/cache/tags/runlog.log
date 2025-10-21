@@ -1,0 +1,80 @@
+Global frequency set at 1000000000000 ticks per second
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 25.0.0.0
+gem5 compiled Jul 27 2025 00:04:10
+gem5 started Jul 27 2025 00:19:51
+gem5 executing on ASPLOS, pid 1817729
+command line: /home2/arif/gem5-25.0.0.0/build/X86/gem5.debug --debug-flags=BertiPrefetcher,Cache,HWPrefetch /home2/arif/gem5-25.0.0.0/configs/deprecated/example/se.py --cpu-type=X86O3CPU --mem-size=8GiB --bertil1 --pl2sl3cache --standard-switch=200000000 --warmup-insts=200000000 --maxinsts=50000000 --cmd=/home2/arif/gem5-25.0.0.0/Checkpoints/xalancbmk/run/xalancbmk_s_base.spec-m64 '--option=-v /home2/arif/gem5-25.0.0.0/Checkpoints/xalancbmk/run/t5.xml /home2/arif/gem5-25.0.0.0/Checkpoints/xalancbmk/run/xalanc.xsl' -r 165000000000 --at-instruction --checkpoint-dir=/home2/arif/gem5-25.0.0.0/Checkpoints/xalancbmk/Simpoints --prog-interval=300Hz
+
+Switch at instruction count:1
+47106803327000: system.cpu.icache: access for ReadReq [2a7eb0:2a7eb7] IF miss
+47106803327000: system.cpu.icache: createMissPacket: created ReadCleanReq [2a7e80:2a7ebf] IF from ReadReq [2a7eb0:2a7eb7] IF
+47106803327000: system.cpu.icache: handleAtomicReqMiss: Sending an atomic ReadCleanReq [2a7e80:2a7ebf] IF
+47106803327000: system.cpu.l2cache: access for ReadCleanReq [2a7e80:2a7ebf] IF miss
+47106803327000: system.cpu.l2cache: createMissPacket: created ReadSharedReq [2a7e80:2a7ebf] IF from ReadCleanReq [2a7e80:2a7ebf] IF
+47106803327000: system.cpu.l2cache: handleAtomicReqMiss: Sending an atomic ReadSharedReq [2a7e80:2a7ebf] IF
+47106803327000: system.l3: access for ReadSharedReq [2a7e80:2a7ebf] IF miss
+47106803327000: system.l3: createMissPacket: created ReadSharedReq [2a7e80:2a7ebf] IF from ReadSharedReq [2a7e80:2a7ebf] IF
+47106803327000: system.l3: handleAtomicReqMiss: Sending an atomic ReadSharedReq [2a7e80:2a7ebf] IF
+47106803327000: system.l3: handleAtomicReqMiss: Receive response: ReadResp [2a7e80:2a7ebf] IF for 
+Valid: 0
+47106803327000: system.l3: Block addr 0x2a7e80 (ns) moving from  to state: 6 (E) writable: 1 readable: 1 dirty: 0 prefetched: 0 | tag: 0x15 secure: 0 valid: 1 | set: 0x1fa way: 0
+47106803327000: system.cpu.l2cache: handleAtomicReqMiss: Receive response: ReadResp [2a7e80:2a7ebf] IF for 
+Valid: 0
+47106803327000: system.cpu.l2cache: Block addr 0x2a7e80 (ns) moving from  to state: 6 (E) writable: 1 readable: 1 dirty: 0 prefetched: 0 | tag: 0x2a secure: 0 valid: 1 | set: 0x1fa way: 0
+47106803327000: system.cpu.icache: handleAtomicReqMiss: Receive response: ReadResp [2a7e80:2a7ebf] IF for 
+Valid: 0
+47106803327000: system.cpu.icache: Block addr 0x2a7e80 (ns) moving from  to state: 4 (S) writable: 0 readable: 1 dirty: 0 prefetched: 0 | tag: 0xa9 secure: 0 valid: 1 | set: 0xfa way: 0
+47106803327500: system.cpu.icache: access for ReadReq [2a7eb0:2a7eb7] IF hit state: 4 (S) writable: 0 readable: 1 dirty: 0 prefetched: 0 | tag: 0xa9 secure: 0 valid: 1 | set: 0xfa way: 0
+Switched CPUS @ tick 47106803327500
+switching cpus
+Switch at instruction count:200000000
+Starting warmup @ tick 47106803328500
+47106803329000: system.cpu.icache: access for ReadReq [2a7eb0:2a7eb7] IF hit state: 4 (S) writable: 0 readable: 1 dirty: 0 prefetched: 0 | tag: 0xa9 secure: 0 valid: 1 | set: 0xfa way: 0
+47106803385000: system.cpu.icache: access for ReadReq [2a7eb0:2a7eb7] IF hit state: 4 (S) writable: 0 readable: 1 dirty: 0 prefetched: 0 | tag: 0xa9 secure: 0 valid: 1 | set: 0xfa way: 0
+47106803386000: system.cpu.icache: access for ReadReq [2a7eb8:2a7ebf] IF hit state: 4 (S) writable: 0 readable: 1 dirty: 0 prefetched: 0 | tag: 0xa9 secure: 0 valid: 1 | set: 0xfa way: 0
+47106803387000: system.cpu.icache: access for ReadReq [2a7eb8:2a7ebf] IF hit state: 4 (S) writable: 0 readable: 1 dirty: 0 prefetched: 0 | tag: 0xa9 secure: 0 valid: 1 | set: 0xfa way: 0
+47106803388000: system.cpu.icache: access for ReadReq [2a7ec0:2a7ec7] IF miss
+47106803389000: system.cpu.icache: sendMSHRQueuePacket: MSHR ReadReq [2a7ec0:2a7ec7] IF
+47106803389000: system.cpu.icache: createMissPacket: created ReadCleanReq [2a7ec0:2a7eff] IF from ReadReq [2a7ec0:2a7ec7] IF
+47106803389000: system.cpu.l2cache: access for ReadCleanReq [2a7ec0:2a7eff] IF miss
+47106803394000: system.cpu.l2cache: sendMSHRQueuePacket: MSHR ReadCleanReq [2a7ec0:2a7eff] IF
+47106803394000: system.cpu.l2cache: createMissPacket: created ReadSharedReq [2a7ec0:2a7eff] IF from ReadCleanReq [2a7ec0:2a7eff] IF
+47106803394000: system.l3: access for ReadSharedReq [2a7ec0:2a7eff] IF miss
+47106803404500: system.l3: sendMSHRQueuePacket: MSHR ReadSharedReq [2a7ec0:2a7eff] IF
+47106803404500: system.l3: createMissPacket: created ReadSharedReq [2a7ec0:2a7eff] IF from ReadSharedReq [2a7ec0:2a7eff] IF
+47106803468000: system.l3: recvTimingResp: Handling response ReadResp [2a7ec0:2a7eff] IF
+47106803468000: system.l3: Block for addr 0x2a7ec0 being updated in Cache
+Valid: 0
+47106803468000: system.l3: Block addr 0x2a7ec0 (ns) moving from  to state: 6 (E) writable: 1 readable: 1 dirty: 0 prefetched: 0 | tag: 0x15 secure: 0 valid: 1 | set: 0x1fb way: 0
+47106803478500: system.cpu.l2cache: recvTimingResp: Handling response ReadResp [2a7ec0:2a7eff] IF
+47106803478500: system.cpu.l2cache: Block for addr 0x2a7ec0 being updated in Cache
+Valid: 0
+47106803478500: system.cpu.l2cache: Block addr 0x2a7ec0 (ns) moving from  to state: 6 (E) writable: 1 readable: 1 dirty: 0 prefetched: 0 | tag: 0x2a secure: 0 valid: 1 | set: 0x1fb way: 0
+47106803483500: system.cpu.icache: recvTimingResp: Handling response ReadResp [2a7ec0:2a7eff] IF
+47106803483500: system.cpu.icache: Block for addr 0x2a7ec0 being updated in Cache
+Valid: 0
+47106803483500: system.cpu.icache: Block addr 0x2a7ec0 (ns) moving from  to state: 4 (S) writable: 0 readable: 1 dirty: 0 prefetched: 0 | tag: 0xa9 secure: 0 valid: 1 | set: 0xfb way: 0
+47106803484500: system.cpu.dcache: access for ReadReq [bccd2b8:bccd2bf] miss
+47106803486500: system.cpu.dcache: sendMSHRQueuePacket: MSHR ReadReq [bccd2b8:bccd2bf]
+47106803486500: system.cpu.dcache: createMissPacket: created ReadSharedReq [bccd280:bccd2bf] from ReadReq [bccd2b8:bccd2bf]
+47106803486500: system.cpu.l2cache: access for ReadSharedReq [bccd280:bccd2bf] miss
+47106803491500: system.cpu.l2cache: sendMSHRQueuePacket: MSHR ReadSharedReq [bccd280:bccd2bf]
+47106803491500: system.cpu.l2cache: createMissPacket: created ReadSharedReq [bccd280:bccd2bf] from ReadSharedReq [bccd280:bccd2bf]
+47106803491500: system.l3: access for ReadSharedReq [bccd280:bccd2bf] miss
+47106803502000: system.l3: sendMSHRQueuePacket: MSHR ReadSharedReq [bccd280:bccd2bf]
+47106803502000: system.l3: createMissPacket: created ReadSharedReq [bccd280:bccd2bf] from ReadSharedReq [bccd280:bccd2bf]
+47106803565000: system.l3: recvTimingResp: Handling response ReadResp [bccd280:bccd2bf]
+47106803565000: system.l3: Block for addr 0xbccd280 being updated in Cache
+Valid: 0
+47106803565000: system.l3: Block addr 0xbccd280 (ns) moving from  to state: 6 (E) writable: 1 readable: 1 dirty: 0 prefetched: 0 | tag: 0x5e6 secure: 0 valid: 1 | set: 0x34a way: 0
+47106803575500: system.cpu.l2cache: recvTimingResp: Handling response ReadResp [bccd280:bccd2bf]
+47106803575500: system.cpu.l2cache: Block for addr 0xbccd280 being updated in Cache
+Valid: 0
+47106803575500: system.cpu.l2cache: Block addr 0xbccd280 (ns) moving from  to state: 6 (E) writable: 1 readable: 1 dirty: 0 prefetched: 0 | tag: 0xbcc secure: 0 valid: 1 | set: 0x34a way: 0
+47106803580500: system.cpu.dcache: recvTimingResp: Handling response ReadResp [bccd280:bccd2bf]
+47106803580500: system.cpu.dcache: Block for addr 0xbccd280 being updated in Cache
+Valid: 0
+47106803580500: system.cpu.dcache: Block addr 0xbccd280 (ns) moving from  to state: 6 (E) writable: 1 readable: 1 dirty: 0 prefetched: 0 | tag: 0x2f33 secure: 0 valid: 1 | set: 0x4a way: 0
