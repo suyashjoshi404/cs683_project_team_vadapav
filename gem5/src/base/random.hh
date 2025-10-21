@@ -186,8 +186,9 @@ class Random
     typename std::enable_if_t<std::is_integral_v<T>, T>
     random()
     {
+        std::uniform_int_distribution<T> dist;
         // [0, max_value] for integer types
-        return gen() % std::numeric_limits<T>::max();
+        return dist(gen) % std::numeric_limits<T>::max();
     }
 
     /**
@@ -199,7 +200,8 @@ class Random
     {
         // [0, 1) for real types
         warn_once("FP random numbers are not uniformly distributed.");
-        return ((T) gen()) /
+        std::uniform_real_distribution<T> dist;
+        return ((T) dist(gen)) /
           ((T) std::numeric_limits<uint64_t>::max());
     }
 
@@ -211,9 +213,9 @@ class Random
     random(T min, T max)
     {
         assert(min <= max);
+        std::uniform_int_distribution<T> dist(min, max);
         // + 1 to handle cases where min == max
-        T r = gen() % (max - min + 1) + min;
-        return r;
+        return dist(gen);;
     }
 };
 

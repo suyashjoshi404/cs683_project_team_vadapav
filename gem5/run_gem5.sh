@@ -17,9 +17,8 @@ touch ${OUTDIR}
 echo $OUTDIR
 
 run_script() {
-  #1M+2M
   # script="$GEM5_HOME/build/ARM/gem5.opt  --outdir=${OUTDIR} --debug-file=trace.out.gz  $GEM5_CFG --m1 -W 1000000 -I 2000000 --disk-image="${CKPT_DIR}/ubuntu-image.img" --ftqSize=24 --bootloader="${M5_PATH}/binaries/boot_v2_qemu_virt.arm64" --caches "$@" --cpu-type O3CPU --fdip --bp-type TAGE --restore "${CKPT_DIR}" --num-cores 1 -n 1 --mem-size 16384MiB > ${OUTDIR}/out.txt 2>&1"
-  #5M+10M
+  # 5M+100M
   script="$GEM5_HOME/build/ARM/gem5.opt  \
   --outdir=${OUTDIR} \
   $GEM5_CFG  \
@@ -34,7 +33,7 @@ run_script() {
   "$@" \
   > ${OUTDIR}/out.txt 2>&1"
   
-  #5M+100M
+  # 5M+100M
   # script="$GEM5_HOME/build/ARM/gem5.opt  --outdir=${OUTDIR} --debug-file=trace.out.gz  $GEM5_CFG --m1 -W 5000000 -I 100000000 --disk-image="${CKPT_DIR}/ubuntu-image.img" --ftqSize=24 --bootloader="${M5_PATH}/binaries/boot_v2_qemu_virt.arm64" --caches "$@" --cpu-type O3CPU --fdip --bp-type TAGE --restore "${CKPT_DIR}" --num-cores 1 -n 1 --mem-size 16384MiB > ${OUTDIR}/out.txt 2>&1"
 
    if eval "$script"; then
@@ -51,38 +50,39 @@ case "$CONFIG" in
     echo "CONFIG: LRU"
     run_script ""
     ;;
+  "Triage")
+    echo "CONFIG: Triage"
+    run_script --triage
+    ;;
+  "Triangel")
+    echo "CONFIG: Triage"
+    run_script --triangel
+    ;;
   "LRU_L1D-Stride")
     echo "CONFIG: LRU_L1D-Stride"
     run_script --l1d-hwp-type=StridePrefetcher
     ;;
-  # "LRU_L1D-DCPT")
-  #   echo "CONFIG: LRU_L1D-Stride"
-  #   run_script --l1d-hwp-type=DCPTPrefetcher
-  #   ;;
-  # "LRU_L1D-BOPPrefetcher")
-  #   echo "CONFIG: LRU_BOPPrefetcher"
-  #   run_script --l1d-hwp-type=BOPPrefetcher
-  #   ;;
-  # "LRU_L1D-SignaturePathPrefetcher")
-  #   echo "CONFIG: LRU_SignaturePathPrefetcher"
-  #   run_script --l1d-hwp-type=SignaturePathPrefetcher
-  #   ;;
-
+  "LRU_L1D-DCPT")
+    echo "CONFIG: LRU_L1D-Stride"
+    run_script --l1d-hwp-type=DCPTPrefetcher
+    ;;
+  "LRU_L1D-BOPPrefetcher")
+    echo "CONFIG: LRU_BOPPrefetcher"
+    run_script --l1d-hwp-type=BOPPrefetcher
+    ;;
+  "LRU_L1D-SignaturePathPrefetcher")
+    echo "CONFIG: LRU_SignaturePathPrefetcher"
+    run_script --l1d-hwp-type=SignaturePathPrefetcher
+    ;;
   "LRU_L1D-Berti")
     echo "CONFIG: LRU_L1D-Berti"
     run_script --l1d-hwp-type=BertiPrefetcher
     ;;
-  
   "LRU_L1D-IPCP")
     echo "CONFIG: LRU_L1D-IPCP"
     run_script --l1d-hwp-type=IPCPPrefetcher
     ;;
-
-  # "LRU_L1D-Triage")
-  #   echo "CONFIG: LRU_L1D-Triage"
-  #   run_script --l1d-hwp-type=TriagePrefetcher
-  #   ;;
-
+  
   "LRU_L2-Stride")
     echo "CONFIG: LRU_L2-Stride"
     run_script --l2-hwp-type=StridePrefetcher

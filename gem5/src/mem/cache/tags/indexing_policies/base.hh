@@ -75,11 +75,13 @@ class IndexingPolicyTemplate : public SimObject
     using KeyType = typename Types::KeyType;
     using Params = typename Types::Params;
 
+public:
     /**
      * The associativity.
      */
     const unsigned assoc;
 
+protected:
     /**
      * The number of sets in the cache.
      */

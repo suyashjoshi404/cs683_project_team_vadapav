@@ -77,11 +77,11 @@ class BasePrefetcher(ClockedObject):
     on_data = Param.Bool(True, "Notify prefetcher on data accesses")
     on_inst = Param.Bool(True, "Notify prefetcher on instruction accesses")
     prefetch_on_access = Param.Bool(
-        True,
+        Parent.prefetch_on_access,
         "Notify the hardware prefetcher on every access (not just misses)",
     )
     prefetch_on_pf_hit = Param.Bool(
-        True,
+        Parent.prefetch_on_pf_hit,
         "Notify the hardware prefetcher on hit on prefetched lines",
     )
     use_virtual_addresses = Param.Bool(
@@ -90,6 +90,8 @@ class BasePrefetcher(ClockedObject):
     page_bytes = Param.MemorySize(
         "4KiB", "Size of pages for virtual addresses"
     )
+
+    cross_pages = Param.Bool(False, "can cross page boundaries")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -913,3 +915,343 @@ class IPCPPrefetcher(QueuedPrefetcher):
         "Complex type classification")
     nl_type = Param.Unsigned(4,
         "NL type classification")
+    
+
+class TriageHashedSetAssociative(SetAssociative):
+    type = "TriageHashedSetAssociative"
+    cxx_class = "gem5::prefetch::TriageHashedSetAssociative"
+    cxx_header = "mem/cache/prefetch/triage.hh"
+
+
+class TriagePrefetcher(QueuedPrefetcher):
+    type = "TriagePrefetcher"
+    cxx_class = "gem5::prefetch::Triage"
+    cxx_header = "mem/cache/prefetch/triage.hh"
+
+    # Do not consult stride prefetcher on instruction accesses
+    on_inst = False
+    on_write = False
+    on_miss = True
+    prefetch_on_access = False
+    prefetch_on_pf_hit = True  # TODO: check these!
+    cross_pages = True
+
+    store_unreliable = Param.Bool(True, "Store history for unreliable PCs")
+    cachetags = Param.BaseTags(Parent.tags, "Cache we're storing metadata in")
+    should_rearrange = Param.Bool(True, "Should rearrange on index change")
+    lookahead_two = Param.Bool(
+        False, "Add Triangel-style Lookahead-2 (unconditionally)"
+    )
+    cache_delay = Param.Unsigned(25, "Time to access L3 cache")
+
+    degree = Param.Int(1, "Number of prefetches to generate")
+    lookup_assoc = Param.Unsigned(16, "Associativity of the lookup table")
+    lookup_offset = Param.Unsigned(11, "Offset of the lookup table")
+    training_unit_assoc = Param.Unsigned(
+        16, "Associativity of the training unit"
+    )
+    training_unit_entries = Param.MemorySize(
+        "512", "Number of entries of the training unit"
+    )
+    training_unit_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(
+            entry_size=1,
+            assoc=Parent.training_unit_assoc,
+            size=Parent.training_unit_entries,
+        ),
+        "Indexing policy of the training unit",
+    )
+    training_unit_replacement_policy = Param.BaseReplacementPolicy(
+        RRIPRP(), "Replacement policy of the training unit"
+    )
+
+    address_map_actual_entries = Param.MemorySize(
+        "262144", "Number of entries of the History table"
+    )
+    address_map_max_ways = Param.Unsigned(
+        8, "Max reservation of the History Table"
+    )
+    address_map_actual_cache_assoc = Param.Unsigned(
+        16, "Associativity of the History Table"
+    )  # TODO: assert = address_map_line_assoc * cache assoc / 2
+    address_map_rounded_entries = Param.MemorySize(
+        "262144", "Number of entries of the History table"
+    )  # TODO: assert = rnd(address_map_line_assoc) * cache size / 64 / 2
+    address_map_rounded_cache_assoc = Param.Unsigned(
+        16, "Associativity of the History Table"
+    )  # TODO: assert = address_map_line_assoc * cache assoc / 2
+    address_map_cache_indexing_policy = Param.BaseIndexingPolicy(
+        TriageHashedSetAssociative(
+            entry_size=1,
+            assoc=Parent.address_map_rounded_cache_assoc,
+            size=Parent.address_map_rounded_entries,
+        ),
+        "Indexing policy of the PC table",
+    )
+    address_map_cache_replacement_policy = Param.BaseReplacementPolicy(
+        WeightedLRURP(), "Replacement policy of the Markov table"
+    )
+    hawkeye_threshold = Param.Unsigned(
+        8, "Temporal/Non-temporal threshold (lower more permissive)"
+    )
+
+
+class TriangelHashedSetAssociative(TaggedSetAssociative):
+    type = "TriangelHashedSetAssociative"
+    cxx_class = "gem5::prefetch::TriangelHashedSetAssociative"
+    cxx_header = "mem/cache/prefetch/triangel.hh"
+
+
+class TriangelPrefetcher(QueuedPrefetcher):
+    type = "TriangelPrefetcher"
+    cxx_class = "gem5::prefetch::Triangel"
+    cxx_header = "mem/cache/prefetch/triangel.hh"
+
+    # Do not consult stride prefetcher on instruction accesses
+    on_inst = False
+    on_write = True
+    on_miss = True
+    prefetch_on_access = False
+    prefetch_on_pf_hit = True  # TODO: check these!
+    cross_pages = True
+    use_scs = Param.Bool(True, "Should use second-chance sampler")
+    use_bloom = Param.Bool(False, "Should use bloom filter instead of dueller")
+    should_lookahead = Param.Bool(True, "Should perform lookahead prefetching")
+    cachetags = Param.BaseTags(Parent.tags, "Cache we belong to")
+    should_rearrange = Param.Bool(True, "Should rearrange on index change")
+    use_hawkeye = Param.Bool(False, "Add hawkeye after the sample cache")
+    use_reuse = Param.Bool(True, "Use ReuseConf")
+    use_pattern = Param.Bool(True, "Use PatternConf")
+    use_pattern2 = Param.Bool(True, "Use Pattern2Conf")
+    use_mrb = Param.Bool(True, "Use ReuseBuffer")
+    timed_scs = Param.Bool(True, "Use timed SCS")
+    perfbias = Param.Bool(False, "Bias away from energy efficiency")
+    smallduel = Param.Bool(False, "Use small set dueller")
+    #  use_requestor_id = Param.Bool(True, "Use requestor id based history")
+    useSampleConfidence = Param.Bool(False, "Use sample confidence")
+    degree = Param.Int(4, "Maximum number of prefetches to generate")
+    cache_delay = Param.Unsigned(25, "Time to access L3 cache")
+
+    sctags = Param.BaseTags(
+        Parent.tags, "Cache we check for second-chance sampling"
+    )
+    lookup_assoc = Param.Unsigned(0, "Associativity of the lookup table")
+    lookup_offset = Param.Unsigned(11, "Offset of the lookup table")
+    training_unit_assoc = Param.Unsigned(
+        16, "Associativity of the training unit"
+    )
+    training_unit_entries = Param.MemorySize(
+        "512", "Number of entries of the training unit"
+    )
+    training_unit_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
+            entry_size=1,
+            assoc=Parent.training_unit_assoc,
+            size=Parent.training_unit_entries,
+        ),
+        "Indexing policy of the training unit",
+    )
+    training_unit_replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(), "Replacement policy of the training unit"
+    )
+
+    address_map_actual_entries = Param.MemorySize(
+        "196608", "Number of entries of the History table"
+    )
+    address_map_max_ways = Param.Unsigned(
+        8, "Max reservation of the History Table"
+    )
+    address_map_actual_cache_assoc = Param.Unsigned(
+        12, "Associativity of the History Table"
+    )  # TODO: assert = address_map_line_assoc * cache assoc / 2
+    address_map_rounded_entries = Param.MemorySize(
+        "262144", "Number of entries of the History table"
+    )  # TODO: assert = rnd(address_map_line_assoc) * cache size / 64 / 2
+    address_map_rounded_cache_assoc = Param.Unsigned(
+        16, "Associativity of the History Table"
+    )  # TODO: assert = address_map_line_assoc * cache assoc / 2
+    address_map_cache_indexing_policy = Param.TaggedIndexingPolicy(
+        TriangelHashedSetAssociative(
+            entry_size=1,
+            assoc=Parent.address_map_rounded_cache_assoc,
+            size=Parent.address_map_rounded_entries,
+        ),
+        "Indexing policy of the PC table",
+    )
+    address_map_cache_replacement_policy = Param.BaseReplacementPolicy(
+        RRIPRP(), "Replacement policy of the Markov table"
+    )
+    sample_assoc = Param.Int(2, "Associativity of the Sample Cache")
+    sample_entries = Param.MemorySize(
+        "512", "Number of entries of the Sample cache"
+    )
+    sample_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
+            entry_size=1,
+            assoc=Parent.sample_assoc,
+            size=Parent.sample_entries,
+        ),
+        "Indexing policy of the sample cache",
+    )
+    sample_replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(), "Replacement policy of the training unit"
+    )
+    metadata_reuse_assoc = Param.Int(
+        2, "Associativity of the Metadata Reuse Buffer"
+    )
+    metadata_reuse_entries = Param.MemorySize(
+        "256", "Number of entries of the Metadata Reuse Buffer"
+    )
+    metadata_reuse_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
+            entry_size=1,
+            assoc=Parent.metadata_reuse_assoc,
+            size=Parent.metadata_reuse_entries,
+        ),
+        "Indexing policy of the Prefetched cache",
+    )
+    metadata_reuse_replacement_policy = Param.BaseReplacementPolicy(
+        FIFORP(), "Replacement policy of the Prefetched cache"
+    )
+
+    secondchance_assoc = Param.Int(
+        2, "Associativity of the Second Chance Sampler"
+    )
+    secondchance_entries = Param.MemorySize(
+        "64", "Number of entries of the Second Chance Sampler"
+    )
+    secondchance_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
+            entry_size=1,
+            assoc=Parent.secondchance_assoc,
+            size=Parent.secondchance_entries,
+        ),
+        "Indexing policy of the Second Chance Sampler",
+    )
+    secondchance_replacement_policy = Param.BaseReplacementPolicy(
+        FIFORP(), "Replacement policy of the Second Chance Sampler"
+    )
+
+
+class SimpleTriangelHashedSetAssociative(SetAssociative):
+    type = "SimpleTriangelHashedSetAssociative"
+    cxx_class = "gem5::prefetch::SimpleTriangelHashedSetAssociative"
+    cxx_header = "mem/cache/prefetch/simpletriangel.hh"
+
+
+class SimpleTriangelPrefetcher(QueuedPrefetcher):
+    type = "SimpleTriangelPrefetcher"
+    cxx_class = "gem5::prefetch::SimpleTriangel"
+    cxx_header = "mem/cache/prefetch/simpletriangel.hh"
+
+    # Do not consult stride prefetcher on instruction accesses
+    on_inst = False
+    on_write = True
+    on_miss = True
+    prefetch_on_access = False
+    prefetch_on_pf_hit = True  # TODO: check these!
+    cross_pages = True
+    use_scs = Param.Bool(True, "Should use second-chance sampler")
+    should_lookahead = Param.Bool(True, "Should perform lookahead prefetching")
+    cachetags = Param.BaseTags(Parent.tags, "Cache we belong to")
+    should_rearrange = Param.Bool(True, "Should rearrange on index change")
+    degree = Param.Int(4, "Maximum number of prefetches to generate")
+    cache_delay = Param.Unsigned(25, "Time to access L3 cache")
+
+    sctags = Param.BaseTags(
+        Parent.tags, "Cache we check for second-chance sampling"
+    )
+    training_unit_assoc = Param.Unsigned(
+        16, "Associativity of the training unit"
+    )
+    training_unit_entries = Param.MemorySize(
+        "512", "Number of entries of the training unit"
+    )
+    training_unit_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(
+            entry_size=1,
+            assoc=Parent.training_unit_assoc,
+            size=Parent.training_unit_entries,
+        ),
+        "Indexing policy of the training unit",
+    )
+    training_unit_replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(), "Replacement policy of the training unit"
+    )
+
+    address_map_actual_entries = Param.MemorySize(
+        "196608", "Number of entries of the History table"
+    )
+    address_map_max_ways = Param.Unsigned(
+        8, "Max reservation of the History Table"
+    )
+    address_map_actual_cache_assoc = Param.Unsigned(
+        12, "Associativity of the History Table"
+    )  # TODO: assert = address_map_line_assoc * cache assoc / 2
+    address_map_rounded_entries = Param.MemorySize(
+        "262144", "Number of entries of the History table"
+    )  # TODO: assert = rnd(address_map_line_assoc) * cache size / 64 / 2
+    address_map_rounded_cache_assoc = Param.Unsigned(
+        16, "Associativity of the History Table"
+    )  # TODO: assert = address_map_line_assoc * cache assoc / 2
+    address_map_cache_indexing_policy = Param.BaseIndexingPolicy(
+        SimpleTriangelHashedSetAssociative(
+            entry_size=1,
+            assoc=Parent.address_map_rounded_cache_assoc,
+            size=Parent.address_map_rounded_entries,
+        ),
+        "Indexing policy of the PC table",
+    )
+    address_map_cache_replacement_policy = Param.BaseReplacementPolicy(
+        RRIPRP(), "Replacement policy of the Markov table"
+    )
+    sample_assoc = Param.Int(2, "Associativity of the Sample Cache")
+    sample_entries = Param.MemorySize(
+        "512", "Number of entries of the Sample cache"
+    )
+    sample_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(
+            entry_size=1,
+            assoc=Parent.sample_assoc,
+            size=Parent.sample_entries,
+        ),
+        "Indexing policy of the sample cache",
+    )
+    sample_replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(), "Replacement policy of the training unit"
+    )
+    metadata_reuse_assoc = Param.Int(
+        2, "Associativity of the Metadata Reuse Buffer"
+    )
+    metadata_reuse_entries = Param.MemorySize(
+        "256", "Number of entries of the Metadata Reuse Buffer"
+    )
+    metadata_reuse_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(
+            entry_size=1,
+            assoc=Parent.metadata_reuse_assoc,
+            size=Parent.metadata_reuse_entries,
+        ),
+        "Indexing policy of the Prefetched cache",
+    )
+    metadata_reuse_replacement_policy = Param.BaseReplacementPolicy(
+        FIFORP(), "Replacement policy of the Prefetched cache"
+    )
+
+    secondchance_assoc = Param.Int(
+        2, "Associativity of the Second Chance Sampler"
+    )
+    secondchance_entries = Param.MemorySize(
+        "64", "Number of entries of the Second Chance Sampler"
+    )
+    secondchance_indexing_policy = Param.BaseIndexingPolicy(
+        SetAssociative(
+            entry_size=1,
+            assoc=Parent.secondchance_assoc,
+            size=Parent.secondchance_entries,
+        ),
+        "Indexing policy of the Second Chance Sampler",
+    )
+    secondchance_replacement_policy = Param.BaseReplacementPolicy(
+        FIFORP(), "Replacement policy of the Second Chance Sampler"
+    )

@@ -49,11 +49,14 @@ SimObject('Prefetcher.py', sim_objects=[
     'DeltaCorrelatingPredictionTables', 'DCPTPrefetcher',
     'IrregularStreamBufferPrefetcher', 'SlimAMPMPrefetcher',
     'BOPPrefetcher', 'SBOOEPrefetcher', 'STeMSPrefetcher', 'PIFPrefetcher',
-    'FetchDirectedPrefetcher', 'BertiPrefetcher', "IPCPPrefetcher"
+    'FetchDirectedPrefetcher', 'BertiPrefetcher', 'IPCPPrefetcher',
+    'TriangelHashedSetAssociative', 'TriangelPrefetcher',
+    'SimpleTriangelHashedSetAssociative', 'SimpleTriangelPrefetcher',
+    'TriageHashedSetAssociative', 'TriagePrefetcher'
     ])
 
-# DebugFlag('BertiPrefetcher')
-# DebugFlag('BertiRubyPrefetcher')
+DebugFlag('BertiPrefetcher')
+DebugFlag('BertiRubyPrefetcher')
 
 Source('access_map_pattern_matching.cc')
 Source('base.cc')
@@ -75,3 +78,8 @@ Source('tagged.cc')
 Source('fdp.cc')
 Source('berti.cc')
 Source('ipcp.cc')
+Source('simpletriangel.cc')
+Source('triangel.cc')
+Source('triage.cc')
+Source('MurmurHash2.c')
+Source('bloom.c')

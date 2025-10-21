@@ -52,6 +52,7 @@
 #include "base/named.hh"
 #include "base/types.hh"
 #include "mem/cache/replacement_policies/base.hh"
+#include "mem/cache/replacement_policies/weighted_lru_rp.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
 
@@ -72,6 +73,10 @@ class AssociativeCache : public Named
 
     /** Associativity of the cache. */
     size_t associativity;
+
+    int allocAssoc = 0;
+
+  public:
 
     /** The replacement policy of the cache. */
     BaseReplacementPolicy *replPolicy;
@@ -100,10 +105,12 @@ class AssociativeCache : public Named
 
   public:
 
+      const int numEntries;
+
     /**
      * Empty constructor - need to call init() later with all args
      */
-    AssociativeCache(std::string_view name) : Named(name) {}
+    AssociativeCache(std::string_view name) : Named(name), numEntries(0) {}
 
     /**
      * Public constructor
@@ -121,10 +128,12 @@ class AssociativeCache : public Named
                      Entry const &init_val = Entry())
         : Named(name),
           associativity(associativity_),
+          allocAssoc(associativity_),
           replPolicy(repl_policy),
           indexingPolicy(indexing_policy),
           entries(num_entries, init_val),
-          debugFlag(nullptr)
+          debugFlag(nullptr),
+          numEntries(num_entries)
     {
         initParams(num_entries, associativity);
     }
@@ -172,6 +181,20 @@ class AssociativeCache : public Named
         debugFlag = &flag;
     }
 
+    void setWayAllocationMax(int ways)
+    {
+        allocAssoc = ways;
+    }
+
+    /**
+     * Get the way allocation mask limit.
+     * @return The maximum number of ways available for replacement.
+     */
+    int getWayAllocationMax() const
+    {
+        return allocAssoc;
+    }
+
     /**
      * Do an access to the entry if it exists.
      * This is required to update the replacement information data.
@@ -188,6 +211,14 @@ class AssociativeCache : public Named
         }
 
         return entry;
+    }
+
+    virtual void
+    weightedAccessEntry(Entry* entry, int weight, bool fill = false)
+    {
+        gem5::replacement_policy::WeightedLRU* wlru = dynamic_cast<gem5::replacement_policy::WeightedLRU*>(replPolicy);
+        if(wlru && entry) wlru->touch(entry->replacementData, weight);
+        else if(!fill) accessEntry(entry);  //not fill for RRIPs
     }
 
     /**
@@ -237,8 +268,15 @@ class AssociativeCache : public Named
     findVictim(const KeyType &key)
     {
         auto candidates = indexingPolicy->getPossibleEntries(key);
+        if(getWayAllocationMax() == 0){
+            auto victim = static_cast<Entry*>(replPolicy->getVictim(candidates));
+            invalidate(victim);
+            return victim;
+        }
+        auto slice = std::vector<ReplaceableEntry *>(
+            candidates.begin(), candidates.begin() + getWayAllocationMax());
 
-        auto victim = static_cast<Entry*>(replPolicy->getVictim(candidates));
+        auto victim = static_cast<Entry*>(replPolicy->getVictim(slice));
 
         if (debugFlag && debugFlag->tracing() && victim->isValid()) {
             ::gem5::trace::getDebugLogger()->dprintf_flag(
@@ -292,10 +330,20 @@ class AssociativeCache : public Named
     {
         std::vector<ReplaceableEntry *> selected_entries =
             indexingPolicy->getPossibleEntries(key);
+        if(getWayAllocationMax() == 0){
+            std::vector<Entry *> entries;
+            std::transform(selected_entries.begin(), selected_entries.end(),
+                           std::back_inserter(entries), [](auto &entry) {
+                               return static_cast<Entry *>(entry);
+                           });
+            return entries;
+        }
 
+        auto slice = std::vector<ReplaceableEntry *>(
+            selected_entries.begin(), selected_entries.begin() + getWayAllocationMax());
         std::vector<Entry *> entries;
 
-        std::transform(selected_entries.begin(), selected_entries.end(),
+        std::transform(slice.begin(), slice.end(),
                        std::back_inserter(entries), [](auto &entry) {
                            return static_cast<Entry *>(entry);
                        });

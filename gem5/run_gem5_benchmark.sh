@@ -37,7 +37,8 @@ CONFIG_MAP["LRU_SignaturePathPrefetcher"]="LRU_SignaturePathPrefetcher"
 CONFIG_MAP["LRU_L1D-Berti"]="LRU_L1D-Berti"
 CONFIG_MAP["LRU_L1D-IPCP"]="LRU_L1D-IPCP"
 
-# CONFIG_MAP["LRU_L1D-Triage"]="LRU_L1D-Triage"
+CONFIG_MAP["Triage"]="Triage"
+CONFIG_MAP["Triangel"]="Triangel"
 
 
 # Validate config

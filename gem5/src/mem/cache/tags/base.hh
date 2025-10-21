@@ -99,8 +99,12 @@ class BaseTags : public ClockedObject
     /** Marked true when the cache is warmed up. */
     bool warmedUp;
 
+public:
+
     /** the number of blocks in the cache */
     const unsigned numBlocks;
+
+protected:
 
     /** The data blocks, 1 per cache block. */
     std::unique_ptr<uint8_t[]> dataBlks;
@@ -239,6 +243,11 @@ class BaseTags : public ClockedObject
         panic("This tag class does not implement way allocation limit!\n");
     }
 
+    virtual void clearSetWay(int set, int way)
+    {
+         panic("This tag class does not implement way allocation limit!\n");
+    }
+
     /**
      * Get the way allocation mask limit.
      * @return The maximum number of ways available for replacement.
@@ -264,6 +273,16 @@ class BaseTags : public ClockedObject
         stats.sampledRefs++;
 
         blk->invalidate();
+    }
+
+    std::vector<CacheBlk*> badBlocks;
+
+    CacheBlk* getBadBlock() {
+      if(badBlocks.empty()) return NULL;
+
+      CacheBlk* blk = badBlocks.back();
+      badBlocks.pop_back();
+      return blk;
     }
 
     virtual CacheBlk* starveMRU(Addr addr, bool is_secure) = 0;

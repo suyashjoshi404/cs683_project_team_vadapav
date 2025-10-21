@@ -74,6 +74,10 @@ class LRU : public Base
     void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
                                                                     override;
 
+    void updateReplacement(const std::shared_ptr<ReplacementData>& replacement_data,
+                        const std::shared_ptr<ReplacementData>& old_replacement_data);
+
+    
     /**
      * Touch an entry to update its replacement data.
      * Sets its last touch tick as the current tick.
